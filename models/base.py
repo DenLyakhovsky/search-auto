@@ -11,10 +11,6 @@ def save_to_db():
         id INTEGER PRIMARY KEY,
         title TEXT, 
         price INTEGER, 
-        url TEXT,
-        image1 BLOB, 
-        image2 BLOB, 
-        image3 BLOB 
-        )''')
+        url TEXT)''')
 
         print("Close database successfully")

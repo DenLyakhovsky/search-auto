@@ -1,5 +1,5 @@
 import sqlite3
-from scraper.scraper import scrappy_cards
+from scraper.scraper import datas_from_card
 
 
 # Перевірка цін, які були раніше
@@ -17,7 +17,7 @@ def check_the_price():
                 'price': price,
             })
 
-        scrapped_cars = scrappy_cards()
+        scrapped_cars = datas_from_card
 
         changed_prices = {}
         for new_price in scrapped_cars:
@@ -49,27 +49,28 @@ def check_the_id():
 
         existing_prices = [{'id': row[0]} for row in cur.fetchall()]
 
-        cars = []
-        if check:
-            for check_item in check.keys():
-                for db_item in existing_prices:
-                    if db_item.get('id') == check_item:
-                        cur.execute('SELECT * FROM cars WHERE id = ?', (db_item.get('id'),))
+    cars = []
+    if check:
+        for check_item in check.keys():
+            for db_item in existing_prices:
+                if db_item.get('id') == check_item:
+                    cur.execute('SELECT * FROM cars WHERE id = ?', (db_item.get('id'),))
 
-                        result = cur.fetchone()
-                        cars.append(result)
+                    result = cur.fetchone()
+                    cars.append(result)
 
     return cars
 
 
 # Видалення із БД авто, які були продані
 def delete_the_car():
+    existing_prices = []
+
     with sqlite3.connect('auto.db') as con:
         cur = con.cursor()
 
         cur.execute('SELECT id, title, url FROM cars')
 
-        existing_prices = []
         for id, title, url in cur.fetchall():
             existing_prices.append({
                 'id': id,
@@ -77,56 +78,56 @@ def delete_the_car():
                 'url': url,
             })
 
-        scrapped_cars = scrappy_cards()
+    scrapped_cars = datas_from_card
 
-        deleted_cars = []
-        for item_from_db in existing_prices:
-            url_from_db = item_from_db.get('url')
+    deleted_cars = []
+    for item_from_db in existing_prices:
+        url_from_db = item_from_db.get('url')
 
-            if url_from_db is not None:
-                found_in_scrapped = next(
-                    (item_cars for item_cars in scrapped_cars if url_from_db in item_cars.get('url')), None)
+        if url_from_db is not None:
+            found_in_scrapped = next(
+                (item_cars for item_cars in scrapped_cars if url_from_db in item_cars.get('url')), None)
 
-                if found_in_scrapped is None:
-                    deleted_cars.append({
-                        'id': item_from_db.get('id'),
-                        'title': item_from_db.get('title'),
-                        'url': url_from_db,
-                    })
+            if found_in_scrapped is None:
+                deleted_cars.append({
+                    'id': item_from_db.get('id'),
+                    'title': item_from_db.get('title'),
+                    'url': url_from_db,
+                })
 
-        return deleted_cars
+    return deleted_cars
 
 
 # Функція, для обробки нових постів
 def newly_published_cars():
+    existing_prices = []
+
     with sqlite3.connect('auto.db') as con:
         cur = con.cursor()
 
         cur.execute('SELECT id, url FROM cars')
 
-        existing_prices = []
         for id, url in cur.fetchall():
             existing_prices.append({
                 'id': id,
                 'url': url,
             })
 
-        scrapped_cars = scrappy_cards()
+    scrapped_cars = datas_from_card
 
-        new_cars = []
-        for item_cars in scrapped_cars:
-            is_found = False
-            for item_from_db in existing_prices:
-                if item_from_db.get('url') is not None and item_from_db.get('url') == item_cars.get('url'):
-                    is_found = True
-                    break
+    new_cars = []
+    for item_cars in scrapped_cars:
+        is_found = False
+        for item_from_db in existing_prices:
+            if item_from_db.get('url')[0] is not None and item_from_db.get('url') == item_cars.get('url'):
+                is_found = True
+                break
 
-            if not is_found:
-                new_cars.append({
-                    'title': item_cars.get('title'),
-                    'price': item_cars.get('price'),
-                    'url': item_cars.get('url'),
-                    'imgs': item_cars.get('img'),
-                })
+        if not is_found:
+            new_cars.append({
+                'title': item_cars.get('title'),
+                'price': item_cars.get('price'),
+                'url': item_cars.get('url'),
+            })
 
-        return new_cars
+    return new_cars

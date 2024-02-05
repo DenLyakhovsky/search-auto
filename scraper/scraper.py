@@ -32,14 +32,15 @@ def remove_symbols(text):
             return new_text
 
 
+datas_from_card = []
+
+
 # Парсинг автомобілів
 def scrappy_cards():
     url_auto = "https://auto.ria.com/uk/search/?indexName=auto,order_auto,newauto_search&categories.main.id=1&brand.id[0]=79&model.id[0]=2104&country.import.usa.not=0&price.currency=1&abroad.not=0&custom.not=-1&page=0&size=30"
 
     r = requests.get(url_auto).text
     soup = BeautifulSoup(r, 'lxml')
-
-    datas_from_card = []
 
     num = 1
     all_cards = soup.find(id='searchResults').find_all('section')
@@ -48,33 +49,21 @@ def scrappy_cards():
             title = element.find(class_='content').find('a').text.strip()
             price = element.find(class_='content').find(class_='size15').find_all('span')[0].text.strip()  # with $
 
-            urls = [element.find(class_='address').get('href')]
+            urls = element.find(class_='address').get('href')
 
-            for url in urls:
-                r_img = requests.get(url).text
-                soup_img = BeautifulSoup(r_img, 'lxml')
+            datas_from_card.append({
+                'title': title,
+                'price': int(remove_symbols(price)),
+                'url': urls,
+            })
 
-                pic = soup_img.find(class_='auto-content').find(class_='wrapper').find_all(class_='outline m-auto')
+            print(f'Виконано: {num}')
+            num += 1
 
-                image = []
-
-                for i in pic[:3]:
-                    image.append(i.get('src'))
-
-                datas_from_card.append({
-                    'title': title,
-                    'price': int(remove_symbols(price)),
-                    'url': url,
-                    'img': convert_to_png(img_url=image),
-                })
-
-                print(f'Виконано: {num}')
-                num += 1
+            if num == 5:
+                break
 
         except AttributeError:
             continue
-
-        if num == 5:
-            break
 
     return datas_from_card
